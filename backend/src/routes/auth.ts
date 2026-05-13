@@ -18,7 +18,7 @@ const authRouter = Router()
 authRouter.get('/csrf-token', (_req, res) => {
     const csrfToken = crypto.randomBytes(32).toString('hex')
 
-    res.cookie('csrfToken', csrfToken, {
+    res.cookie('_csrf', csrfToken, {
         httpOnly: false,
         sameSite: 'strict',
         secure: false,

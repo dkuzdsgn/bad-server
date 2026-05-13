@@ -14,6 +14,16 @@ import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
 import serveStatic from './middlewares/serverStatic'
 import routes from './routes'
+const limiter = rateLimit({
+    // Указываем интервал времени, в рамках которого зададим ограничение
+    windowMs: 15 * 60 * 1000,
+    // Ограничиваем количество запросов в этом интервале
+    limit: 10,
+    // Включаем заголовки нового типа `RateLimit-*`
+    standardHeaders: true,
+    // Отключаем заголовки старого типа `X-RateLimit-*`
+    legacyHeaders: false,
+})
 
 const { PORT = 3000, ORIGIN_ALLOW = 'http://localhost' } = process.env
 
@@ -39,12 +49,7 @@ app.use(helmet({
 }
 ))
 
-app.use(rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-}))
-
-
+app.use(limiter) 
 
 app.use(urlencoded({
     extended: true,

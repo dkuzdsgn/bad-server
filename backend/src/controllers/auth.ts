@@ -192,7 +192,8 @@ const updateCurrentUser = async (
 ) => {
     const userId = res.locals.user._id
     try {
-        const updatedUser = await User.findByIdAndUpdate(userId, req.body, {
+        const {name, email} = req.body
+        const updatedUser = await User.findByIdAndUpdate(userId, {name, email}, {
             new: true,
         }).orFail(
             () =>

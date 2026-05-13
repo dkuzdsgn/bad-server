@@ -8,7 +8,7 @@ import path from 'path'
 
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
-import mongoSanitize from 'express-mongo-sanitize'
+
 
 import { DB_ADDRESS } from './config'
 import errorHandler from './middlewares/error-handler'
@@ -44,7 +44,7 @@ app.use(rateLimit({
     max: 100,
 }))
 
-app.use(mongoSanitize())
+
 
 app.use(urlencoded({
     extended: true,

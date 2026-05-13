@@ -293,6 +293,9 @@ export const createOrder = async (
         const { address, payment, phone, total, email, items, comment } =
             req.body
 
+        const safeComment = String(comment || '')
+            .replace(/<[^>]*>/g, '')
+            .trim()
         items.forEach((id: Types.ObjectId) => {
             const product = products.find((p) => p._id.equals(id))
             if (!product) {
@@ -314,7 +317,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            comment,
+            comment: safeComment,
             customer: userId,
             deliveryAddress: address,
         })

@@ -18,7 +18,7 @@ const limiter = rateLimit({
     // Указываем интервал времени, в рамках которого зададим ограничение
     windowMs: 15 * 60 * 1000,
     // Ограничиваем количество запросов в этом интервале
-    limit: 10,
+    limit: 5,
     // Включаем заголовки нового типа `RateLimit-*`
     standardHeaders: true,
     // Отключаем заголовки старого типа `X-RateLimit-*`
@@ -49,7 +49,7 @@ app.use(helmet({
 }
 ))
 
-app.use('/api', limiter)
+app.use(limiter)
 
 app.use(urlencoded({
     extended: true,

@@ -1,12 +1,6 @@
 import { Request, Express } from 'express'
 import multer, { FileFilterCallback } from 'multer'
-import { mkdirSync } from 'fs'
-import { join, extname } from 'path'
-import crypto from 'crypto'
 import sharp from 'sharp'
-
-type DestinationCallback = (error: Error | null, destination: string) => void
-type FileNameCallback = (error: Error | null, filename: string) => void
 
 const storage = multer.memoryStorage()
 

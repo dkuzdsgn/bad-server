@@ -5,6 +5,7 @@ import NotFoundError from '../errors/not-found-error'
 import Order, { IOrder } from '../models/order'
 import Product, { IProduct } from '../models/product'
 import User from '../models/user'
+import escapeRegExp from '../utils/escapeRegExp'
 
 // eslint-disable-next-line max-len
 // GET /orders?page=2&limit=5&sort=totalAmount&order=desc&orderDateFrom=2024-07-01&orderDateTo=2024-08-01&status=delivering&totalAmountFrom=100&totalAmountTo=1000&search=%2B1
@@ -17,7 +18,7 @@ export const getOrders = async (
     try {
         const {
             page = 1,
-            limit = 10,
+            limit: rawLimit = 10,
             sortField = 'createdAt',
             sortOrder = 'desc',
             status,
@@ -27,16 +28,15 @@ export const getOrders = async (
             orderDateTo,
             search,
         } = req.query
-
+        const limit = Math.min(Number(rawLimit) || 10, 10)
         const filters: FilterQuery<Partial<IOrder>> = {}
 
-        if (status) {
-            if (typeof status === 'object') {
-                Object.assign(filters, status)
-            }
-            if (typeof status === 'string') {
-                filters.status = status
-            }
+        if (status && typeof status !== 'string') {
+            return next(new BadRequestError('Некорректный статус'))
+        }
+
+        if (typeof status === 'string') {
+            filters.status = status
         }
 
         if (totalAmountFrom) {
@@ -90,7 +90,7 @@ export const getOrders = async (
         ]
 
         if (search) {
-            const searchRegex = new RegExp(search as string, 'i')
+            const searchRegex = new RegExp(escapeRegExp(search as string), 'i')
             const searchNumber = Number(search)
 
             const searchConditions: any[] = [{ 'products.title': searchRegex }]
@@ -109,9 +109,19 @@ export const getOrders = async (
         }
 
         const sort: { [key: string]: any } = {}
+        const allowedSortFields = [
+            'createdAt',
+            'totalAmount',
+            'orderNumber',
+            'status',
+        ]
+
+        const safeSortField = allowedSortFields.includes(sortField as string)
+            ? (sortField as string)
+            : 'createdAt'
 
         if (sortField && sortOrder) {
-            sort[sortField as string] = sortOrder === 'desc' ? -1 : 1
+            sort[safeSortField] = sortOrder === 'desc' ? -1 : 1
         }
 
         aggregatePipeline.push(
@@ -156,7 +166,8 @@ export const getOrdersCurrentUser = async (
 ) => {
     try {
         const userId = res.locals.user._id
-        const { search, page = 1, limit = 5 } = req.query
+        const { search, page = 1, limit: rawLimit = 5 } = req.query
+        const limit = Math.min(Number(rawLimit) || 5, 10)
         const options = {
             skip: (Number(page) - 1) * Number(limit),
             limit: Number(limit),
@@ -185,7 +196,7 @@ export const getOrdersCurrentUser = async (
 
         if (search) {
             // если не экранировать то получаем Invalid regular expression: /+1/i: Nothing to repeat
-            const searchRegex = new RegExp(search as string, 'i')
+            const searchRegex = new RegExp(escapeRegExp(search as string), 'i')
             const searchNumber = Number(search)
             const products = await Product.find({ title: searchRegex })
             const productIds = products.map((product) => product._id)
@@ -294,6 +305,9 @@ export const createOrder = async (
         const { address, payment, phone, total, email, items, comment } =
             req.body
 
+        const safeComment = String(comment || '')
+            .replace(/<[^>]*>/g, '')
+            .trim()
         items.forEach((id: Types.ObjectId) => {
             const product = products.find((p) => p._id.equals(id))
             if (!product) {
@@ -315,7 +329,7 @@ export const createOrder = async (
             payment,
             phone,
             email,
-            comment,
+            comment: safeComment,
             customer: userId,
             deliveryAddress: address,
         })

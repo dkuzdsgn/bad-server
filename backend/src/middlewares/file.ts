@@ -1,37 +1,7 @@
 import { Request, Express } from 'express'
 import multer, { FileFilterCallback } from 'multer'
-import { mkdirSync } from 'fs'
-import { join } from 'path'
 
-type DestinationCallback = (error: Error | null, destination: string) => void
-type FileNameCallback = (error: Error | null, filename: string) => void
-
-const storage = multer.diskStorage({
-    destination: (
-        _req: Request,
-        _file: Express.Multer.File,
-        cb: DestinationCallback
-    ) => {
-        const destinationPath = join(
-            __dirname,
-            process.env.UPLOAD_PATH_TEMP
-                ? `../public/${process.env.UPLOAD_PATH_TEMP}`
-                : '../public'
-        )
-
-        mkdirSync(destinationPath, { recursive: true })
-
-        cb(null, destinationPath)
-    },
-
-    filename: (
-        _req: Request,
-        file: Express.Multer.File,
-        cb: FileNameCallback
-    ) => {
-        cb(null, file.originalname)
-    },
-})
+const storage = multer.memoryStorage()
 
 const types = [
     'image/png',
@@ -41,16 +11,24 @@ const types = [
     'image/svg+xml',
 ]
 
-const fileFilter = (
+const fileFilter = async (
     _req: Request,
     file: Express.Multer.File,
     cb: FileFilterCallback
 ) => {
-    if (!types.includes(file.mimetype)) {
-        return cb(null, false)
-    }
+    try {
+        if (!types.includes(file.mimetype)) {
+            return cb(new Error('Неверный тип файла'))
+        }
 
-    return cb(null, true)
+        return cb(null, true)
+    } catch {
+        return cb(new Error('Файл не является изображением'))
+    }
 }
 
-export default multer({ storage, fileFilter })
+export default multer({
+    storage, fileFilter, limits: {
+        fileSize: 10 * 1024 * 1024,
+    },
+})

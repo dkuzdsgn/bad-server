@@ -31,10 +31,12 @@ export const getOrders = async (
         const limit = Math.min(Number(rawLimit) || 10, 10)
         const filters: FilterQuery<Partial<IOrder>> = {}
 
-        if (status) {
-            if (typeof status === 'string') {
-                filters.status = status
-            }
+        if (status && typeof status !== 'string') {
+            return next(new BadRequestError('Некорректный статус'))
+        }
+
+        if (typeof status === 'string') {
+            filters.status = status
         }
 
         if (totalAmountFrom) {
@@ -117,9 +119,9 @@ export const getOrders = async (
         const safeSortField = allowedSortFields.includes(sortField as string)
             ? (sortField as string)
             : 'createdAt'
-            
+
         if (sortField && sortOrder) {
-            sort[safeSortField as string] = sortOrder === 'desc' ? -1 : 1
+            sort[safeSortField] = sortOrder === 'desc' ? -1 : 1
         }
 
         aggregatePipeline.push(

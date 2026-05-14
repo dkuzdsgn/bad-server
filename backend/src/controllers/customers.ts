@@ -123,7 +123,7 @@ export const getCustomers = async (
             : 'createdAt'
             
         if (sortField && sortOrder) {
-            sort[safeSortField as string] = sortOrder === 'desc' ? -1 : 1
+            sort[safeSortField] = sortOrder === 'desc' ? -1 : 1
         }
 
         const options = {

@@ -111,8 +111,19 @@ export const getCustomers = async (
 
         const sort: { [key: string]: any } = {}
 
+        const allowedSortFields = [
+            'createdAt',
+            'totalAmount',
+            'orderNumber',
+            'status',
+        ]
+
+        const safeSortField = allowedSortFields.includes(sortField as string)
+            ? (sortField as string)
+            : 'createdAt'
+            
         if (sortField && sortOrder) {
-            sort[sortField as string] = sortOrder === 'desc' ? -1 : 1
+            sort[safeSortField as string] = sortOrder === 'desc' ? -1 : 1
         }
 
         const options = {

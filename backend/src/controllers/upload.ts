@@ -4,7 +4,7 @@ import BadRequestError from '../errors/bad-request-error'
 import crypto from 'crypto'
 import fs from 'fs'
 import { join } from 'path'
-
+import sharp from 'sharp'
 
 export const uploadFile = async (
     req: Request,
@@ -45,6 +45,11 @@ export const uploadFile = async (
 
         const uploadPath = join(uploadDir, safeFileName)
 
+        const metadata = await sharp(req.file.buffer).metadata()
+
+        if (!metadata.format) {
+            return next(new BadRequestError('Файл не является изображением'))
+        }
         fs.writeFileSync(
             uploadPath,
             new Uint8Array(req.file.buffer)

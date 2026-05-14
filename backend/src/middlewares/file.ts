@@ -1,6 +1,5 @@
 import { Request, Express } from 'express'
 import multer, { FileFilterCallback } from 'multer'
-import sharp from 'sharp'
 
 const storage = multer.memoryStorage()
 
@@ -20,12 +19,6 @@ const fileFilter = async (
     try {
         if (!types.includes(file.mimetype)) {
             return cb(new Error('Неверный тип файла'))
-        }
-
-        const metadata = await sharp(file.buffer).metadata()
-
-        if (!metadata.format) {
-            return cb(new Error('Файл не является изображением'))
         }
 
         return cb(null, true)

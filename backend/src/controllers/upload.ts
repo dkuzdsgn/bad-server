@@ -29,8 +29,13 @@ export const uploadFile = async (
             'image/svg+xml': '.svg',
         }
 
-        const safeFileName =
-            crypto.randomUUID() + extensions[req.file.mimetype]
+        const extension = extensions[req.file.mimetype]
+
+        if (!extension) {
+            return next(new BadRequestError('Неверный тип файла'))
+        }
+
+        const safeFileName = `${crypto.randomUUID()}${extension}`
 
         const uploadDir = process.env.UPLOAD_PATH
             ? join(__dirname, `../public/${process.env.UPLOAD_PATH}`)
@@ -40,8 +45,10 @@ export const uploadFile = async (
 
         const uploadPath = join(uploadDir, safeFileName)
 
-        fs.writeFileSync(uploadPath, new Uint8Array(req.file.buffer))
-
+        fs.writeFileSync(
+            uploadPath,
+            new Uint8Array(req.file.buffer)
+        )
         const fileName = process.env.UPLOAD_PATH
             ? `/${process.env.UPLOAD_PATH}/${safeFileName}`
             : `/${safeFileName}`

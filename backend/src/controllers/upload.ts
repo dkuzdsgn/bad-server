@@ -3,7 +3,7 @@ import { constants } from 'http2'
 import BadRequestError from '../errors/bad-request-error'
 import crypto from 'crypto'
 import fs from 'fs'
-import { extname, join } from 'path'
+import { join } from 'path'
 
 
 export const uploadFile = async (
@@ -21,9 +21,16 @@ export const uploadFile = async (
         )
     }
     try {
+        const extensions: Record<string, string> = {
+            'image/png': '.png',
+            'image/jpeg': '.jpg',
+            'image/jpg': '.jpg',
+            'image/gif': '.gif',
+            'image/svg+xml': '.svg',
+        }
+
         const safeFileName =
-            crypto.randomUUID() +
-            extname(req.file.originalname)
+            crypto.randomUUID() + extensions[req.file.mimetype]
 
         const uploadDir = process.env.UPLOAD_PATH
             ? join(__dirname, `../public/${process.env.UPLOAD_PATH}`)
